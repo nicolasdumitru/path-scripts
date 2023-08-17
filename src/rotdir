@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# This script "rotates" the content of a directory based on the file supplied as an argument or, by default, if no arguments are supplied, the first file in the directory.
+
+base="$(basename "${1:-$(find ./* -type f -print -o -name . -o -prune | head -n 1)}")"
+find ./* -type f -print -o -name . -o -prune |
+	awk -v BASE="./${base}" 'BEGIN { lines = ""; m = 0; } { if ($0 == BASE) { m = 1; } } { if (!m) { if (lines) { lines = lines"\n"; } lines = lines""$0; } else { print $0; } } END { print lines; }'
