@@ -12,13 +12,14 @@ notifications=0
 directory_error_message="$screenshots_directory is not properly configured. Halting."
 flag_error_message="Invalid flag. Halting"
 type_error_message="Invalid screenshot type. Halting."
+screenshot_error_message="Failed to take the screenshot."
 
 # Parse optional flags
 opts=''
 curropt=''
 optgroup=''
 virtoptgroup=''
-while getopts "bcn" curropt; do
+while getopts "bcdn" curropt; do
 	paramgroup="$1"
 	case "$curropt" in
 		b)
@@ -26,6 +27,9 @@ while getopts "bcn" curropt; do
 			;;
 		c)
 			flag="--hidecursor"
+			;;
+		d)
+			flag="--delay=0.2 --quiet"
 			;;
 		n)
 			notifications=1
@@ -76,9 +80,12 @@ esac
 
 # Take the screenshot according to selected options
 screenshot_name=screenshot-"$(date "+%Y-%m-%d-%H-%M-%S")".png
-if maim $opts --delay=0 --format=png --quality 10 "${screenshots_directory}"/"${screenshot_name}"; then
+if maim $opts --format=png --quality 10 "${screenshots_directory}"/"${screenshot_name}"; then
 	[ "$notifications" -eq 1 ] && notify-send "Screenshot saved" "$screenshot_name"
 	echo "${screenshots_directory}/${screenshot_name}"
 	exit 0
 fi
+
+[ "$notifications" -eq 1 ] && notify-send "Screenshot saved" "$screenshot_error_message"
+echo "$screenshot_error_message"
 exit 1
