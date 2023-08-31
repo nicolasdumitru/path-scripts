@@ -1,0 +1,78 @@
+#!/bin/sh
+
+umask 077
+
+# Directory where screenshots are saved
+screenshots_directory="$HOME"/pictures/screenshots
+
+# Error messages
+directory_error_message="$screenshots_directory is not properly configured. Halting."
+flag_error_message="Invalid flag. Halting"
+type_error_message="Invalid screenshot type. Halting."
+
+# Check the directory where screenshots exists and has the right permissions
+if ! [ -d "$screenshots_directory" ] || ! [ -r "$screenshots_directory" ] || ! [ -w "$screenshots_directory" ] || ! [ -x "$screenshots_directory" ]; then
+	notify-send "Error" "$directory_error_message"
+	echo "$directory_error_message" 1>&2
+	exit 1
+fi
+
+# Parse optional flags
+opts=''
+curropt=''
+optgroup=''
+virtoptgroup=''
+while getopts "bc" curropt; do
+	paramgroup="$1"
+	case "$curropt" in
+		b)
+			flag="--capturebackground"
+			;;
+		c)
+			flag="--hidecursor"
+			;;
+		*)
+			notify-send "Error" "$flag_error_message"
+			echo "$flag_error_message" 1>&2
+			exit 1
+			;;
+	esac
+	virtoptgroup="${virtoptgroup}${curropt}"
+	optgroup="${optgroup} ${flag}"
+	if [ "-${virtoptgroup}" = "$paramgroup" ]; then
+		opts="${opts}${optgroup}"
+		shift 1
+		virtoptgroup=''
+		optgroup=''
+	fi
+done
+
+# Select screenshot type
+case "$1" in
+	full)
+		opts="${opts} "
+		;;
+	screen)
+		opts="${opts} --window=root"
+		;;
+	window)
+		opts="${opts} --window=$(xdotool getactivewindow)"
+		;;
+	select)
+		opts="${opts} --select --bordersize=3 --color=255,255,255"
+		;;
+	*)
+		notify-send "Error" "$type_error_message"
+		echo "$type_error_message" 1>&2
+		exit 0
+		;;
+esac
+
+# Take the screenshot according to selected options
+screenshot_name=screenshot-"$(date "+%Y-%m-%d-%H-%M-%S")".png
+if maim $opts --delay=0 --format=png --quality 10 "${screenshots_directory}"/"${screenshot_name}"; then
+	notify-send "Screenshot saved" "$screenshot_name"
+	echo "${screenshots_directory}/${screenshot_name}"
+	exit 0
+fi
+exit 1
