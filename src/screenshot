@@ -1,20 +1,24 @@
 #!/bin/sh
 
+# Set the right default permissions for files
 umask 077
+
+# Aliases
+alias notify-send='notify-send --urgency=critical'
 
 # Directory where screenshots are saved
 screenshots_directory="$HOME"/pictures/screenshots
 
-# Notifications
+# Notifications (default none)
 notifications=0
 
 # Error messages
 directory_error_message="$screenshots_directory is not properly configured. Halting."
-flag_error_message="Invalid flag. Halting"
-type_error_message="Invalid screenshot type. Halting."
+flag_error_message="contains an invalid flag. Halting."
+type_error_message="is an invalid screenshot type. Halting."
 screenshot_error_message="Failed to take the screenshot."
 
-# Parse optional flags
+# Parse optional flags, save them and remove them from the positional parameters
 opts=''
 curropt=''
 optgroup=''
@@ -35,8 +39,8 @@ while getopts "bcdn" curropt; do
 			notifications=1
 			;;
 		*)
-			[ "$notifications" -eq 1 ] && notify-send "Error" "$flag_error_message"
-			echo "$flag_error_message" 1>&2
+			[ "$notifications" -eq 1 ] && notify-send "Error" "'${1}' $flag_error_message"
+			echo "'${1}' $flag_error_message" 1>&2
 			exit 1
 			;;
 	esac
@@ -57,7 +61,7 @@ if ! [ -d "$screenshots_directory" ] || ! [ -r "$screenshots_directory" ] || ! [
 	exit 1
 fi
 
-# Select screenshot type
+# Select the screenshot type
 case "$1" in
 	full)
 		opts="${opts} "
@@ -72,20 +76,21 @@ case "$1" in
 		opts="${opts} --select --bordersize=3 --color=255,255,255"
 		;;
 	*)
-		[ "$notifications" -eq 1 ] && notify-send "Error" "$type_error_message"
-		echo "$type_error_message" 1>&2
-		exit 0
+		[ "$notifications" -eq 1 ] && notify-send "Error" "'${1}' $type_error_message"
+		echo "'${1}' $type_error_message" 1>&2
+		exit 1
 		;;
 esac
 
 # Take the screenshot according to selected options
 screenshot_name=screenshot-"$(date "+%Y-%m-%d-%H-%M-%S")".png
 if maim $opts --format=png --quality 10 "${screenshots_directory}"/"${screenshot_name}"; then
-	[ "$notifications" -eq 1 ] && notify-send "Screenshot saved" "$screenshot_name"
+	[ "$notifications" -eq 1 ] && command notify-send "Screenshot saved" "$screenshot_name"
 	echo "${screenshots_directory}/${screenshot_name}"
 	exit 0
 fi
 
-[ "$notifications" -eq 1 ] && notify-send "Screenshot saved" "$screenshot_error_message"
-echo "$screenshot_error_message"
+# Notify if screenshot couldn't be taken
+[ "$notifications" -eq 1 ] && notify-send "Screenshot NOT saved" "$screenshot_error_message"
+echo "$screenshot_error_message" 1>&2
 exit 1
