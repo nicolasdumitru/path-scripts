@@ -1,13 +1,32 @@
 #!/bin/sh
 
-# Aliases
-alias notify-send='notify-send --urgency=critical'
-
 # Error messages
+choice_error_title='Invalid Choice'
 choice_error_message='is an invalid choice. Halting.'
+
+# Cancel messages
+choice_cancel_title='Operation Cancelled'
+choice_cancel_message='No screenshot will be taken. Halting.'
 
 # Flags (must be set)
 screenshot_flags=''
+
+# Exit handler (exit status, stdout, stderr, notifications)
+exit_handler () {
+	exit_code=$1
+	notification_title="$2"
+	message="$3"
+	notify_opts=' '
+	if [ "${exit_code}" -gt 0 ]; then
+		notify_opts='--urgency=critical'
+		echo "${message}" 1>&2
+	else
+		echo "${message}"
+	fi
+	shift 3
+	notify-send $notify_opts "${notification_title}" "${*:-$message}"
+	exit "$exit_code"
+}
 
 # Screenshot types
 dmenu_type_full="full (all screens)"
@@ -28,10 +47,7 @@ case "$dmenu_type_pick" in
 		screenshot_type='select'
 		screenshot_flags='-bd'
 		;;
-	*)
-		notify-send "Error" "'$dmenu_type_pick' $choice_error_message"
-		exit 1
-		;;
+	*) exit_handler 1 "$choice_error_title" "'$dmenu_type_pick' $choice_error_message" ;;
 esac
 
 # Choose whether to capture background when relevant
@@ -39,14 +55,9 @@ case "$screenshot_type" in
 	window)
 		capture_background="$(printf "yes\nno" | dmenu -i -p "Capture window background?")"
 		case "$capture_background" in
-			yes)
-				screenshot_flags="${screenshot_flags} -b"
-				;;
+			yes) screenshot_flags="${screenshot_flags} -b" ;;
 			no) ;;
-			*)
-				notify-send "Error" "'$capture_background' $choice_error_message"
-				exit 1
-				;;
+			*) exit_handler 1 "$choice_error_title" "'$capture_background' $choice_error_message" ;;
 		esac
 		;;
 esac
@@ -57,13 +68,8 @@ case "$screenshot_type" in
 		show_cursor="$(printf "show\nhide" | dmenu -i -p "Show the cursor or hide it?")"
 		case "$show_cursor" in
 			show) ;;
-			hide)
-				screenshot_flags="${screenshot_flags} -c"
-				;;
-			*)
-				notify-send "Error" "'$show_cursor' $choice_error_message"
-				exit 1
-				;;
+			hide) screenshot_flags="${screenshot_flags} -c" ;;
+			*) exit_handler 1 "$choice_error_title" "'$show_cursor' $choice_error_message" ;;
 		esac
 		;;
 esac
