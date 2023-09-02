@@ -14,7 +14,7 @@ screenshot_flags=''
 # Exit handler (exit status, stdout, stderr, notifications)
 exit_handler () {
 	exit_code=$1
-	notification_title="$2"
+	exit_notification_title="$2"
 	message="$3"
 	notify_opts=' '
 	if [ "${exit_code}" -gt 0 ]; then
@@ -24,8 +24,22 @@ exit_handler () {
 		echo "${message}"
 	fi
 	shift 3
-	notify-send $notify_opts "${notification_title}" "${*:-$message}"
+	notify-send $notify_opts "${exit_notification_title}" "${*:-$message}"
 	exit "$exit_code"
+}
+
+# Exception handler (cancel/choice error behavior)
+cancel_or_error () {
+	if [ -n "$1" ]; then
+		coe_exit_code=1
+		coe_notification_title="$choice_error_title"
+		coe_message="'$1' $choice_error_message"
+	else
+		coe_exit_code=0
+		coe_notification_title="$choice_cancel_title"
+		coe_message="$choice_cancel_message"
+	fi
+	exit_handler "$coe_exit_code" "$coe_notification_title" "$coe_message"
 }
 
 # Screenshot types
@@ -47,7 +61,7 @@ case "$dmenu_type_pick" in
 		screenshot_type='select'
 		screenshot_flags='-bd'
 		;;
-	*) exit_handler 1 "$choice_error_title" "'$dmenu_type_pick' $choice_error_message" ;;
+	*) cancel_or_error "$dmenu_type_pick" ;;
 esac
 
 # Choose whether to capture background when relevant
@@ -57,7 +71,7 @@ case "$screenshot_type" in
 		case "$capture_background" in
 			yes) screenshot_flags="${screenshot_flags} -b" ;;
 			no) ;;
-			*) exit_handler 1 "$choice_error_title" "'$capture_background' $choice_error_message" ;;
+			*) cancel_or_error "$capture_background" ;;
 		esac
 		;;
 esac
@@ -69,7 +83,7 @@ case "$screenshot_type" in
 		case "$show_cursor" in
 			show) ;;
 			hide) screenshot_flags="${screenshot_flags} -c" ;;
-			*) exit_handler 1 "$choice_error_title" "'$show_cursor' $choice_error_message" ;;
+			*) cancel_or_error "$show_cursor" ;;
 		esac
 		;;
 esac
