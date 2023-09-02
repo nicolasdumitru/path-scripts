@@ -3,9 +3,6 @@
 # Set the right default permissions for files
 umask 077
 
-# Aliases
-alias notify-send='notify-send --urgency=critical'
-
 # Directory where screenshots are saved
 screenshots_directory="$HOME"/pictures/screenshots
 
@@ -18,6 +15,23 @@ flag_error_message="contains an invalid flag. Halting."
 type_error_message="is an invalid screenshot type. Halting."
 screenshot_error_message="Failed to take the screenshot."
 
+# Exit handler (exit status, stdout, stderr, notifications)
+exit_handler () {
+	exit_code=$1
+	notification_title="$2"
+	message="$3"
+	notify_opts=' '
+	if [ "${exit_code}" -gt 0 ]; then
+		notify_opts='--urgency=critical'
+		echo "${message}" 1>&2
+	else
+		echo "${message}"
+	fi
+	shift 3
+	[ "$notifications" -eq 1 ] && notify-send $notify_opts "${notification_title}" "${*:-$message}"
+	exit "$exit_code"
+}
+
 # Parse optional flags, save them and remove them from the positional parameters
 opts=''
 curropt=''
@@ -26,23 +40,11 @@ virtoptgroup=''
 while getopts "bcdn" curropt; do
 	paramgroup="$1"
 	case "$curropt" in
-		b)
-			flag="--capturebackground"
-			;;
-		c)
-			flag="--hidecursor"
-			;;
-		d)
-			flag="--delay=0.2 --quiet"
-			;;
-		n)
-			notifications=1
-			;;
-		*)
-			[ "$notifications" -eq 1 ] && notify-send "Error" "'${1}' $flag_error_message"
-			echo "'${1}' $flag_error_message" 1>&2
-			exit 1
-			;;
+		b) flag="--capturebackground" ;;
+		c) flag="--hidecursor" ;;
+		d) flag="--delay=0.2 --quiet" ;;
+		n) notifications=1 ;;
+		*) exit_handler 1 "Error" "'${1}' $flag_error_message" ;;
 	esac
 	virtoptgroup="${virtoptgroup}${curropt}"
 	optgroup="${optgroup} ${flag}"
@@ -56,41 +58,22 @@ done
 
 # Check the directory where screenshots will be saved exists and has the right permissions
 if ! [ -d "$screenshots_directory" ] || ! [ -r "$screenshots_directory" ] || ! [ -w "$screenshots_directory" ] || ! [ -x "$screenshots_directory" ]; then
-	[ "$notifications" -eq 1 ] && notify-send "Error" "$directory_error_message"
-	echo "$directory_error_message" 1>&2
-	exit 1
+	exit_handler 1 "Error" "$directory_error_message"
 fi
 
 # Select the screenshot type
 case "$1" in
-	full)
-		opts="${opts} "
-		;;
-	screen)
-		opts="${opts} --window=root"
-		;;
-	window)
-		opts="${opts} --window=$(xdotool getactivewindow)"
-		;;
-	select)
-		opts="${opts} --select --bordersize=3 --color=255,255,255"
-		;;
-	*)
-		[ "$notifications" -eq 1 ] && notify-send "Error" "'${1}' $type_error_message"
-		echo "'${1}' $type_error_message" 1>&2
-		exit 1
-		;;
+	full) opts="${opts} " ;;
+	screen) opts="${opts} --window=root" ;;
+	window) opts="${opts} --window=$(xdotool getactivewindow)" ;;
+	select) opts="${opts} --select --bordersize=3 --color=255,255,255" ;;
+	*) exit_handler 1 "Error" "'${1}' $type_error_message" ;;
 esac
 
 # Take the screenshot according to selected options
 screenshot_name=screenshot-"$(date "+%Y-%m-%d-%H-%M-%S")".png
-if maim $opts --format=png --quality 10 "${screenshots_directory}"/"${screenshot_name}"; then
-	[ "$notifications" -eq 1 ] && command notify-send "Screenshot saved" "$screenshot_name"
-	echo "${screenshots_directory}/${screenshot_name}"
-	exit 0
-fi
+maim $opts --format=png --quality 10 "${screenshots_directory}"/"${screenshot_name}" &&
+	exit_handler 0 "Screenshot saved" "${screenshots_directory}/${screenshot_name}" "$screenshot_name"
 
 # Notify if screenshot couldn't be taken
-[ "$notifications" -eq 1 ] && notify-send "Screenshot NOT saved" "$screenshot_error_message"
-echo "$screenshot_error_message" 1>&2
-exit 1
+exit_handler 1 "Screenshot NOT saved" "$screenshot_error_message"
