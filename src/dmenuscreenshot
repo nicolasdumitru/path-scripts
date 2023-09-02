@@ -88,4 +88,5 @@ case "$screenshot_type" in
 		;;
 esac
 
+# Take the screenshot according to the selected options
 screenshot ${screenshot_flags} -n "$screenshot_type"

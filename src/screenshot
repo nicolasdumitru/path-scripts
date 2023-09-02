@@ -18,7 +18,7 @@ screenshot_error_message="Failed to take the screenshot."
 # Exit handler (exit status, stdout, stderr, notifications)
 exit_handler () {
 	exit_code=$1
-	notification_title="$2"
+	exit_notification_title="$2"
 	message="$3"
 	notify_opts=' '
 	if [ "${exit_code}" -gt 0 ]; then
@@ -28,7 +28,7 @@ exit_handler () {
 		echo "${message}"
 	fi
 	shift 3
-	[ "$notifications" -eq 1 ] && notify-send $notify_opts "${notification_title}" "${*:-$message}"
+	[ "$notifications" -eq 1 ] && notify-send $notify_opts "${exit_notification_title}" "${*:-$message}"
 	exit "$exit_code"
 }
 
@@ -70,7 +70,7 @@ case "$1" in
 	*) exit_handler 1 "Error" "'${1}' $type_error_message" ;;
 esac
 
-# Take the screenshot according to selected options
+# Take the screenshot according to the selected options
 screenshot_name=screenshot-"$(date "+%Y-%m-%d-%H-%M-%S")".png
 maim $opts --format=png --quality 10 "${screenshots_directory}"/"${screenshot_name}" &&
 	exit_handler 0 "Screenshot saved" "${screenshots_directory}/${screenshot_name}" "$screenshot_name"
