@@ -18,7 +18,7 @@ exit_handler () {
 	message="$3"
 	notify_opts=' '
 	if [ "${exit_code}" -gt 0 ]; then
-		notify_opts='--urgency=critical'
+		notify_opts='--urgency=critical --expire-time=7000'
 		echo "${message}" 1>&2
 	else
 		echo "${message}"
