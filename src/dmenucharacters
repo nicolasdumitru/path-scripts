@@ -2,10 +2,16 @@
 
 # Get a menu of characters to copy.
 
-# Check if the characters directory exists.
+# Characters directory
 characters_directory="${XDG_DATA_HOME:-$HOME/.local/share}"/personal/chars
+
+# Error messages
+directory_error_message="$characters_directory is not properly configured."
+
+# Check if the characters directory exists.
 if ! [ -d "$characters_directory" ] || ! [ -r "$characters_directory" ] || ! [ -x "$characters_directory" ]; then
-	notify-send "Error" "$characters_directory is not properly configured."
+	notify-send "Error" "$directory_error_message"
+	echo "$directory_error_message" 1>&2
 	exit 1
 fi
 
@@ -13,7 +19,7 @@ fi
 chosen=$(cut -d ';' -f1 "$characters_directory"/* | dmenu -i -l 30 | sed "s/ .*//")
 
 # Exit if none chosen.
-[ -z "$chosen" ] && exit
+[ -z "$chosen" ] && exit 0
 
 # Copy the character to the clipboard and show a confirmation notification.
 printf "%s" "$chosen" | xclip -selection clipboard
