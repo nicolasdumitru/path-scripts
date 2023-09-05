@@ -6,7 +6,7 @@ choice_error_message='is an invalid choice. Halting.'
 
 # Cancel messages
 choice_cancel_title='Operation Cancelled'
-choice_cancel_message='No screenshot will be taken. Halting.'
+choice_cancel_message='No screenshot taken.'
 
 # Flags (must be set)
 screenshot_flags=''
@@ -21,6 +21,7 @@ exit_handler () {
 		notify_opts='--urgency=critical --expire-time=7000'
 		echo "${message}" 1>&2
 	else
+		notify_opts='--expire-time=500'
 		echo "${message}"
 	fi
 	shift 3
