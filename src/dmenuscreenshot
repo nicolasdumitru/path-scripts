@@ -45,18 +45,16 @@ cancel_or_error () {
 
 # Screenshot types
 dmenu_type_full="full (all screens)"
-dmenu_type_screen="screen (the current active screeen)"
 dmenu_type_window="window (the current active window)"
 dmenu_type_select="select interactively (draw a rectangle with the mouse)"
 
 # Concatenate options
-dmenu_options="${dmenu_type_full}\n${dmenu_type_screen}\n${dmenu_type_window}\n${dmenu_type_select}"
+dmenu_options="${dmenu_type_full}\n${dmenu_type_window}\n${dmenu_type_select}"
 
 # Pick a screenshot type with dmenu
 dmenu_type_pick="$(printf "%s${dmenu_options}" | dmenu -l 6 -i -p "Screenshot which area?")"
 case "$dmenu_type_pick" in
 	"$dmenu_type_full") screenshot_type='full' ;;
-	"$dmenu_type_screen") screenshot_type='screen' ;;
 	"$dmenu_type_window") screenshot_type='window' ;;
 	"$dmenu_type_select")
 		screenshot_type='select'
@@ -79,7 +77,7 @@ esac
 
 # Choose to show or hide the cursor
 case "$screenshot_type" in
-	full|screen|window)
+	full|window)
 		show_cursor="$(printf "show\nhide" | dmenu -i -p "Show the cursor or hide it?")"
 		case "$show_cursor" in
 			show) ;;

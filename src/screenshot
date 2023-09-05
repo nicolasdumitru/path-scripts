@@ -64,7 +64,6 @@ fi
 # Select the screenshot type
 case "$1" in
 	full) opts="${opts} " ;;
-	screen) opts="${opts} --window=root" ;;
 	window) opts="${opts} --window=$(xdotool getactivewindow)" ;;
 	select) opts="${opts} --select --bordersize=3 --color=255,255,255" ;;
 	*) exit_handler 1 "Error" "'${1}' $type_error_message" ;;
