@@ -1,0 +1,71 @@
+#!/bin/sh
+
+# This script sets up displays.
+# It doesn't do anything clever, it's only supposed to work on my hardware and it doesn't have an external-monitor-only configuration option because Nvidia.
+# I am likely not going to change it and make it do anything clever until I switch to wayland (and I don't know when I will).
+# If you're reading this and you're not me, modify this script to suit your hardware or find a better one.
+
+# Notifications (default none)
+notifications=0
+
+# Error messages
+type_error_message='is an invalid monitor configuration. Halting.'
+flag_error_message="contains an invalid flag. Halting."
+display_error_message='Failed to set the monitor configuration.'
+
+# Success messages
+display_success_title='Displays configured'
+display_success_message='display configuration has been set.'
+
+# Exit handler (exit status, stdout, stderr, notifications)
+exit_handler () {
+	exit_code=$1
+	exit_notification_title="$2"
+	message="$3"
+	notify_opts=' '
+	if [ "${exit_code}" -gt 0 ]; then
+		notify_opts='--urgency=critical --expire-time=7000'
+		echo "${message}" 1>&2
+	else
+		echo "${message}"
+	fi
+	shift 3
+	[ "$notifications" -eq 1 ] && notify-send $notify_opts "${exit_notification_title}" "${*:-$message}"
+	exit "$exit_code"
+}
+
+success () {
+	exit_handler 0 "$display_success_title" "'${1}' $display_success_message"
+}
+
+# Parse optional flags, save them and remove them from the positional parameters
+curropt=''
+virtoptgroup=''
+while getopts "n" curropt; do
+	paramgroup="$1"
+	case "$curropt" in
+		n) notifications=1 ;;
+		*) exit_handler 1 "Error" "'${1}' $flag_error_message" ;;
+	esac
+	virtoptgroup="${virtoptgroup}${curropt}"
+	if [ "-${virtoptgroup}" = "$paramgroup" ]; then
+		shift 1
+		virtoptgroup=''
+	fi
+done
+
+# Select the monitor configuration
+case "$1" in
+	dual)
+		xrandr --output eDP-1 --mode 1920x1080 --refresh 144 --rotate normal --output HDMI-1 --primary --mode 1920x1080 --refresh 144 --rotate normal --left-of eDP-1 &&
+			success "$1"
+		;;
+	integrated)
+		xrandr --output eDP-1 --primary --mode 1920x1080 --refresh 144 --rotate normal --output HDMI-1 --off &&
+			success "$1"
+		;;
+	*) exit_handler 1 "Error" "'${1}' $type_error_message" ;;
+esac
+
+# Notify if displays couldn't be configured
+exit_handler 1 "Displays NOT configured" "$display_error_message"
