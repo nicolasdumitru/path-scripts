@@ -1,0 +1,59 @@
+#!/bin/sh
+
+# This is a dmenu wrapper for `displayctl`.
+# You know the drill, it doesn't do anything clever for the exact same reasons.
+
+# Error messages
+choice_error_title='Invalid Choice'
+choice_error_message='is an invalid choice. Halting.'
+
+# Cancel messages
+choice_cancel_title='Operation Cancelled'
+choice_cancel_message='Configuration NOT changed.'
+
+# Exit handler (exit status, stdout, stderr, notifications)
+exit_handler () {
+	exit_code=$1
+	exit_notification_title="$2"
+	message="$3"
+	notify_opts=' '
+	if [ "${exit_code}" -gt 0 ]; then
+		notify_opts='--urgency=critical --expire-time=7000'
+		echo "${message}" 1>&2
+	else
+		notify_opts='--expire-time=500'
+		echo "${message}"
+	fi
+	shift 3
+	notify-send $notify_opts "${exit_notification_title}" "${*:-$message}"
+	exit "$exit_code"
+}
+
+# Exception handler (cancel/choice error behavior)
+cancel_or_error () {
+	if [ -n "$1" ]; then
+		coe_exit_code=1
+		coe_notification_title="$choice_error_title"
+		coe_message="'$1' $choice_error_message"
+	else
+		coe_exit_code=0
+		coe_notification_title="$choice_cancel_title"
+		coe_message="$choice_cancel_message"
+	fi
+	exit_handler "$coe_exit_code" "$coe_notification_title" "$coe_message"
+}
+
+# Configuration options
+dmenu_dual="dual (dual display setup)"
+dmenu_integrated="integrated (integrated display only)"
+
+# Concatenate options
+dmenu_options="${dmenu_dual}\n${dmenu_integrated}"
+
+dmenu_configuration_pick="$(printf "%s${dmenu_options}" | dmenu -l 6 -i -p "Screenshot which area?")"
+
+case "$dmenu_configuration_pick" in
+	"$dmenu_dual") displayctl -n dual ;;
+	"$dmenu_integrated") displayctl -n integrated ;;
+	*) cancel_or_error "$dmenu_configuration_pick" ;;
+esac
