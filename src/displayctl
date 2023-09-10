@@ -9,9 +9,9 @@
 notifications=0
 
 # Error messages
-type_error_message='is an invalid monitor configuration. Halting.'
+type_error_message='is an invalid display configuration. Halting.'
 flag_error_message="contains an invalid flag. Halting."
-display_error_message='Failed to set the monitor configuration.'
+display_error_message='Failed to set the display configuration.'
 
 # Success messages
 display_success_title='Displays configured'
