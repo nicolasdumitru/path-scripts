@@ -1,4 +1,4 @@
-#!/bin/dash
+#!/bin/sh
 
 # Set the right default permissions for files
 umask 077
@@ -35,26 +35,17 @@ exit_handler () {
 # Parse optional flags, save them and remove them from the positional parameters
 opts=''
 curropt=''
-optgroup=''
-virtoptgroup=''
+OPTIND=1
 while getopts "bcdn" curropt; do
-	paramgroup="$1"
 	case "$curropt" in
-		b) flag="--capturebackground" ;;
-		c) flag="--hidecursor" ;;
-		d) flag="--delay=0.2 --quiet" ;;
+		b) opts="${opts} --capturebackground" ;;
+		c) opts="${opts} --hidecursor" ;;
+		d) opts="${opts} --delay=0.2 --quiet" ;;
 		n) notifications=1 ;;
 		*) exit_handler 1 "Error" "'${1}' $flag_error_message" ;;
 	esac
-	virtoptgroup="${virtoptgroup}${curropt}"
-	optgroup="${optgroup} ${flag}"
-	if [ "-${virtoptgroup}" = "$paramgroup" ]; then
-		opts="${opts}${optgroup}"
-		shift 1
-		virtoptgroup=''
-		optgroup=''
-	fi
 done
+shift "$((OPTIND - 1))"
 
 # Check the directory where screenshots will be saved exists and has the right permissions
 if ! [ -d "$screenshots_directory" ] || ! [ -r "$screenshots_directory" ] || ! [ -w "$screenshots_directory" ] || ! [ -x "$screenshots_directory" ]; then
