@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/dash
 
 # Set the right default permissions for files
 umask 077
