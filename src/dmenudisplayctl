@@ -46,14 +46,16 @@ cancel_or_error () {
 # Configuration options
 dmenu_dual="dual (dual display setup)"
 dmenu_integrated="integrated (integrated display only)"
+dmenu_interactive="configure interactively (choose with arandr)"
 
 # Concatenate options
-dmenu_options="${dmenu_dual}\n${dmenu_integrated}"
+dmenu_options="${dmenu_dual}\n${dmenu_integrated}\n${dmenu_interactive}"
 
-dmenu_configuration_pick="$(printf "%s${dmenu_options}" | dmenu -l 6 -i -p "Screenshot which area?")"
+dmenu_configuration_pick="$(printf "%s${dmenu_options}" | dmenu -l 6 -i -p "Choose a display configuration:")"
 
 case "$dmenu_configuration_pick" in
 	"$dmenu_dual") displayctl -n dual ;;
 	"$dmenu_integrated") displayctl -n integrated ;;
+	"$dmenu_interactive") arandr ;;
 	*) cancel_or_error "$dmenu_configuration_pick" ;;
 esac
