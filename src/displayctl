@@ -1,4 +1,4 @@
-#!/bin/dash
+#!/bin/sh
 
 # This script sets up displays.
 # It doesn't do anything clever, it's only supposed to work on my hardware and it doesn't have an external-monitor-only configuration option because Nvidia.
@@ -40,19 +40,14 @@ success () {
 
 # Parse optional flags, save them and remove them from the positional parameters
 curropt=''
-virtoptgroup=''
-while getopts "n" curropt; do
-	paramgroup="$1"
-	case "$curropt" in
-		n) notifications=1 ;;
-		*) exit_handler 1 "Error" "'${1}' $flag_error_message" ;;
-	esac
-	virtoptgroup="${virtoptgroup}${curropt}"
-	if [ "-${virtoptgroup}" = "$paramgroup" ]; then
-		shift 1
-		virtoptgroup=''
-	fi
-done
+OPTIND=1
+getopts "n" curropt
+case "$curropt" in
+	n) notifications=1 ;;
+	*) exit_handler 1 "Error" "'${1}' $flag_error_message" ;;
+esac
+shift "$((OPTIND - 1))"
+echo $1
 
 # Select the monitor configuration
 case "$1" in
