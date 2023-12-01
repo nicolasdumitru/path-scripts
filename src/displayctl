@@ -55,6 +55,10 @@ case "$1" in
 		xrandr --output eDP-1 --mode 1920x1080 --refresh 144 --rotate normal --output HDMI-1 --primary --mode 1920x1080 --refresh 144 --rotate normal --left-of eDP-1 &&
 			success "$1"
 		;;
+	mirror)
+		xrandr --output eDP-1 --mode 1920x1080 --refresh 144 --rotate normal --output HDMI-1 --primary --mode 1920x1080 --refresh 144 --rotate normal --same-as eDP-1 --dpi HDMI-1 &&
+			success "$1"
+		;;
 	integrated)
 		xrandr --output eDP-1 --primary --mode 1920x1080 --refresh 144 --rotate normal --output HDMI-1 --off &&
 			success "$1"
