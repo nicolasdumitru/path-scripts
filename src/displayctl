@@ -44,10 +44,10 @@ OPTIND=1
 getopts "n" curropt
 case "$curropt" in
 	n) notifications=1 ;;
+	?) : ;;
 	*) exit_handler 1 "Error" "'${1}' $flag_error_message" ;;
 esac
 shift "$((OPTIND - 1))"
-echo $1
 
 # Select the monitor configuration
 case "$1" in
