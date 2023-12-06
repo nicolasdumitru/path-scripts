@@ -1,0 +1,72 @@
+#!/bin/sh
+
+# This script sets the temperature for displays.
+# For convenience, it uses a few predefined fairly simple options/"modes".
+
+# Notifications (default none)
+notifications=0
+
+# Error messages
+mode_error_message='is an invalid temperature mode. Halting.'
+flag_error_message="contains an invalid flag. Halting."
+temperature_error_message='Failed to set the temperature mode.'
+
+# Success messages
+notification_success_title='Temperature configured'
+notification_success_message='temperature mode has been set.'
+
+# Exit handler (exit status, stdout, stderr, notifications)
+exit_handler () {
+	exit_code=$1
+	exit_notification_title="$2"
+	message="$3"
+	notify_opts=' '
+	if [ "${exit_code}" -gt 0 ]; then
+		notify_opts='--urgency=critical --expire-time=7000'
+		echo "${message}" 1>&2
+	else
+		echo "${message}"
+	fi
+	shift 3
+	[ "$notifications" -eq 1 ] && notify-send $notify_opts "${exit_notification_title}" "${*:-$message}"
+	exit "$exit_code"
+}
+
+success () {
+	exit_handler 0 "$notification_success_title" "'${1}' $notification_success_message"
+}
+
+# Parse optional flags, save them and remove them from the positional parameters
+curropt=''
+OPTIND=1
+getopts "n" curropt
+case "$curropt" in
+	n) notifications=1 ;;
+	?) : ;;
+	*) exit_handler 1 "Error" "'${1}' $flag_error_message" ;;
+esac
+shift "$((OPTIND - 1))"
+
+# Select the temperature mode
+case "$1" in
+	neutral)
+		redshift -PO 6500 &&
+			success "$1"
+		;;
+	night)
+		redshift -PO 4500 &&
+			success "$1"
+		;;
+	daytime-reduced)
+		redshift -PO 6000 &&
+			success "$1"
+		;;
+	reset)
+		redshift -x &&
+			success "$1"
+		;;
+	*) exit_handler 1 "Error" "'${1}' $mode_error_message" ;;
+esac
+
+# Notify if the temperature couldn't be configured
+exit_handler 1 "Temperature NOT configured" "$temperature_error_message"
