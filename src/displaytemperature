@@ -36,6 +36,22 @@ success () {
 	exit_handler 0 "$notification_success_title" "'${1}' $notification_success_message"
 }
 
+set_temperature () {
+	command gummy "$@" 1>/dev/null &&
+		command gummy start 1>/dev/null &&
+		return 0
+}
+
+temperature_specific () {
+	set_temperature -t "$@" &&
+		return 0
+}
+
+temperature_time_based () {
+	set_temperature -T 3 -y 06:00 -u 18:00 --temperature-min "$1" --temperature-max "$2" &&
+		return 0
+}
+
 # Parse optional flags, save them and remove them from the positional parameters
 curropt=''
 OPTIND=1
@@ -49,20 +65,20 @@ shift "$((OPTIND - 1))"
 
 # Select the temperature mode
 case "$1" in
+	default)
+		temperature_time_based 4500 6500 &&
+			success "$1"
+		;;
 	neutral)
-		redshift -PO 6500 &&
+		temperature_specific 6500 &&
 			success "$1"
 		;;
 	night)
-		redshift -PO 4500 &&
+		temperature_specific 4500 &&
 			success "$1"
 		;;
 	daytime-reduced)
-		redshift -PO 6000 &&
-			success "$1"
-		;;
-	reset)
-		redshift -x &&
+		temperature_time_based 4500 6000 &&
 			success "$1"
 		;;
 	*) exit_handler 1 "Error" "'${1}' $mode_error_message" ;;
