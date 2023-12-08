@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# This is a dmenu wrapper for `displayctl`.
+# This is a dmenu wrapper for `displaytemperature`.
 
 # Error messages
 choice_error_title='Invalid Choice'
@@ -43,20 +43,22 @@ cancel_or_error () {
 }
 
 # Configuration options
-dmenu_neutral="neutral mode (normal day display temperature)"
-dmenu_night="night mode (low blue light mode for use at night)"
-dmenu_daytime_reduced="daytime-reduced mode (less blue light; suitable for daytime usage)"
-dmenu_reset="reset mode (remove adjustments)"
+dmenu_default="default mode (time-based)"
+dmenu_daytime_reduced="daytime-reduced mode (default, but slightly warmer during the day)"
+dmenu_neutral="neutral mode (force neutral display temperature)"
+dmenu_night="night mode (force high display temperature)"
 
 # Concatenate options
-dmenu_options="${dmenu_neutral}\n${dmenu_night}\n${dmenu_daytime_reduced}\n${dmenu_reset}"
+dmenu_options="${dmenu_default}\n${dmenu_daytime_reduced}\n${dmenu_neutral}\n${dmenu_night}"
 
 dmenu_configuration_pick="$(printf "%s${dmenu_options}" | dmenu -l 6 -i -p "Choose a temperature mode")"
 
+alias displaytemperature='command displaytemperature -n'
+
 case "$dmenu_configuration_pick" in
-	"$dmenu_neutral") displaytemp -n neutral ;;
-	"$dmenu_night") displaytemp -n night ;;
-	"$dmenu_daytime_reduced") displaytemp -n daytime-reduced ;;
-	"$dmenu_reset") displaytemp -n reset ;;
+	"$dmenu_default") displaytemperature default ;;
+	"$dmenu_daytime_reduced") displaytemperature daytime-reduced ;;
+	"$dmenu_neutral") displaytemperature neutral ;;
+	"$dmenu_night") displaytemperature night ;;
 	*) cancel_or_error "$dmenu_configuration_pick" ;;
 esac
