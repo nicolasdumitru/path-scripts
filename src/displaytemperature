@@ -40,16 +40,19 @@ set_temperature () {
 	command gummy "$@" 1>/dev/null &&
 		command gummy start 1>/dev/null &&
 		return 0
+	return 1;
 }
 
 temperature_specific () {
 	set_temperature -t "$@" &&
 		return 0
+	return 1;
 }
 
 temperature_time_based () {
 	set_temperature -T 3 -y 06:00 -u 18:00 --temperature-min "$1" --temperature-max "$2" &&
 		return 0
+	return 1
 }
 
 # Parse optional flags, save them and remove them from the positional parameters
