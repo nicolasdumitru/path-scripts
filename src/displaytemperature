@@ -50,7 +50,7 @@ temperature_specific () {
 }
 
 temperature_time_based () {
-	set_temperature -T 3 -y 06:00 -u 18:00 --temperature-min "$1" --temperature-max "$2" &&
+	set_temperature -T 3 -y 06:00 -u 19:00 --temperature-min "$1" --temperature-max "$2" &&
 		return 0
 	return 1
 }
